@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Home</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100">
+    <div>
+        <main class="pb-12">
+            <article class="flex flex-col p-5 sm:items-center">
+                <h1 class="pb-16 text-5xl font-semibold sm:text-4xl sm:py-0 text-sky-900">Kitchen Inventory</h1>
+                <div class="sm:w-1/2">
+                    <div class="flex flex-col mt-5 sm:mt-2">
+                        <button
+                            class="flex justify-between px-3 py-2 text-lg font-bold text-white bg-indigo-600 rounded-xl">
+                            Add Item
+                        </button>
+                    </div>
+                    <div class="flex flex-col mt-5 sm:mt-2">
+                        <div class="pb-2 text-xl font-semibold">
+                            Categories
+                        </div>
+                        <div class="flex flex-col overflow-y-scroll">
+                            <div class="flex flex-col gap-3">
+                                <a class="px-3 py-2 text-lg font-bold text-white bg-sky-800 rounded-xl">Vegetables</a>
+                                <a class="px-3 py-2 text-lg font-bold text-white bg-sky-800 rounded-xl">Fruit</a>
+                                <a class="px-3 py-2 text-lg font-bold text-white bg-sky-800 rounded-xl">Meat</a>
+                                <a class="px-3 py-2 text-lg font-bold text-white bg-sky-800 rounded-xl">Dairy</a>
+                            </div>
+                            <button class="self-end py-3 pt-2 font-semibold text-gray-500 active:text-gray-700">
+                                Add New Category
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex flex-col mt-5 sm:mt-2">
+                        <div class="pb-2 text-xl font-semibold">
+                            Location
+                        </div>
+                        <div class="flex flex-col overflow-y-scroll">
+                            <div class="flex flex-col gap-3">
+                                <a
+                                    class="flex justify-between px-3 py-2 text-lg font-bold text-white bg-emerald-800 rounded-xl">
+                                    <div>Cabinet</div>
+                                    <div>8 item</div>
+                                </a>
+                                <a
+                                    class="flex justify-between px-3 py-2 text-lg font-bold text-white bg-emerald-800 rounded-xl">
+                                    <div>Fridge</div>
+                                    <div>23 items</div>
+                                </a>
+                                <a
+                                    class="flex justify-between px-3 py-2 text-lg font-bold text-white bg-emerald-800 rounded-xl">
+                                    <div>Freezer</div>
+                                    <div>46 item</div>
+                                </a>
+                                <button class="self-end py-3 pt-2 font-semibold text-gray-500 active:text-gray-700">
+                                    Add New Location
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-3 mt-5 sm:mt-2">
+                            <a href="all-items.html"
+                                class="flex justify-between px-3 py-2 text-lg font-bold text-white bg-blue-400 rounded-xl">
+                                <div>View all items</div>
+                                <div>70 item</div>
+                            </a>
+                            <a href="deleted.html"
+                                class="flex justify-between px-3 py-2 text-lg font-bold text-white bg-blue-400 rounded-xl">
+                                <div>View deleted items</div>
+                                <div>10 item</div>
+                            </a>
+                        </div>
+                    </div>
+                </div>  
+            </article>
+        </main>
+        <footer class="fixed inset-x-0 bottom-0 z-50 w-full">
+            <div class="flex justify-around py-4 text-xl font-bold bg-white sm:py-2 sm:text-lg rounded-t-3xl ">
+                <a href="index.html" class="text-sky-700">
+                    Home
+                </a>
+                <a href="search.html" class="text-gray-600">
+                    Search
+                </a>
+                <a href="expiring.html" class="text-gray-600">
+                    Expiring
+                </a>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>
