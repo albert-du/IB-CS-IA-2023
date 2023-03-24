@@ -1,14 +1,14 @@
-global using KitchenInventory.Shared;
 global using KitchenInventory.Server.Services;
 global using KitchenInventory.Server.Models;
-using System.Reflection;
+global using KitchenInventory.Shared;
+
 using System.Text;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Microsoft.IdentityModel.Tokens;
-using Swashbuckle.AspNetCore.Filters;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Http.Extensions; 
+using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,8 +21,9 @@ builder.Services.AddDbContext<ItemContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
 
 builder.Services.Configure<JWTOptions>(builder.Configuration.GetSection(JWTOptions.JWT));
+builder.Services.Configure<AuthCredentialsOptions>(builder.Configuration.GetSection(AuthCredentialsOptions.Credentials));
 
-builder.Services.AddSingleton<IAuthService, MockAuthService>();
+builder.Services.AddSingleton<IAuthService, AuthService>();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddControllersWithViews(options =>

@@ -8,7 +8,7 @@ public class JWTOptions
     /// <summary>
     /// JWT Constant Name.
     /// </summary>
-    public const string JWT = "JWT";
+    public const string JWT = nameof(JWT);
 
     /// <summary>
     /// JWT Secret.

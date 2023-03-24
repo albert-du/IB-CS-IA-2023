@@ -1,14 +1,14 @@
 namespace KitchenInventory.Server.Controllers;
 
-using Microsoft.AspNetCore.Mvc;
+using System.Text;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.Extensions.Options;
-using KitchenInventory.Server.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using KitchenInventory.Server.Models;
 
 /// <summary>
 /// Controller for authenticating users.
@@ -41,6 +41,9 @@ public sealed class AuthController : ControllerBase
     [HttpPost("authenticate")]
     public async Task<IActionResult> AuthenticateAsync([FromBody] LoginDTO request)
     {
+        if (string.IsNullOrEmpty(_jwtOptions.Secret))
+            throw new Exception("Set the JWT Secret in appsettings.json."); 
+            
         if (await _authService.AuthenticateAsync(request.Username, request.Password))
         {
             List<Claim> claims = new()

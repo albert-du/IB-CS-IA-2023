@@ -29,22 +29,25 @@ public class AuthService : IAuthService
         try
         {
             var resp = await _httpClient.PostAsJsonAsync<LoginDTO>("/api/auth/login", new(username, password));
-            switch (resp.StatusCode)
+            resp.EnsureSuccessStatusCode();
+            return true;
+        }
+        catch (HttpRequestException ex)
+        {
+            switch (ex.StatusCode)
             {
-                case HttpStatusCode.OK:
-                    return true;
                 case HttpStatusCode.Unauthorized:
-                    return false;
+                    break;
                 default:
-                    _messageService.Send(MessageLevel.Error, $"Failed to authenticate: {resp.StatusCode} {resp.ReasonPhrase}.");
-                    return false;
+                    _messageService.Send(MessageLevel.Error, $"Failed to authenticate: {ex.StatusCode} {ex.GetType()} {ex.Message}");
+                    break;
             }
         }
         catch (Exception ex)
         {
             _messageService.Send(MessageLevel.Error, $"Failed to authenticate: {ex.GetType()} {ex.Message}");
-            return false;
         }
+        return false;
     }
 
     /// <inheritdoc/>
@@ -55,7 +58,7 @@ public class AuthService : IAuthService
             var resp = await _httpClient.PostAsync("/api/auth/logout", null);
             return resp.IsSuccessStatusCode;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             _messageService.Send(MessageLevel.Error, $"Failed to log out: {ex.GetType()} {ex.Message}");
             return false;
