@@ -1,0 +1,3 @@
+@* This is an extention of InputTextArea that binds to the "oninput" event instead of the "onchange" event. *@
+@inherits InputTextArea
+<textarea @attributes="@AdditionalAttributes" @bind="@CurrentValueAsString" @bind:event="oninput" class="@CssClass" />

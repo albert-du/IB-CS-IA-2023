@@ -4,6 +4,7 @@ using KitchenInventory.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Sqlite;
 
 /// <summary>
 /// Controller for the management of items.
@@ -120,7 +121,7 @@ public sealed class ItemController : ControllerBase
         // Try the find the item.
         var item = await _itemContext.Items.FindAsync(id);
         if (item is null)
-            // Return 404 if it doens't exist.
+            // Return 404 if it doesn't exist.
             return NotFound();
 
         // Remove the item from the data context.
@@ -141,32 +142,12 @@ public sealed class ItemController : ControllerBase
     [HttpGet("search")]
     public async Task<PaginatedResult<Item>> SearchAsync(string? q = null, int page = 1, int count = 50, Guid? location = null, Guid? category = null)
     {
-        // Build the linq query.
-        var query =
-            (location, category) switch
-            {
-                // Linq query with the location without the category.
-                (Guid _, null) => _itemContext.Locations
-                                              .AsNoTracking()
-                                              .Where(x => x.Id == location) // Find the location.
-                                              .Take(1)                      // Truncate to one.
-                                              .SelectMany(x => x.Items),    // Select the items.
-                // Linq query with the category without the location.
-                (null, Guid _) => _itemContext.Categories
-                                              .AsNoTracking()
-                                              .Where(x => x.Id == category) // Find the category.
-                                              .Take(1)                      // Truncate to one.
-                                              .SelectMany(x => x.Items),    // Select the items.
-                // Linq query with both the category and the location.
-                (Guid _, Guid _) => _itemContext.Locations
-                                                .AsNoTracking()
-                                                .Where(x => x.Id == location)          // Find the location.
-                                                .Take(1)                               // Truncate to one.
-                                                .SelectMany(x => x.Items)              // Select the items.
-                                                .Where(x => x.CategoryId == category), // Filter the items by category.
-
-                _ => _itemContext.Items
-            };
+        // Build the linq sql query.
+        var query = _itemContext.Items.AsNoTracking();
+        if (location is Guid locationId)
+            query = query.Where(x => x.LocationId == locationId);
+        if (category is Guid categoryId)
+            query = query.Where(x => x.CategoryId == categoryId);
 
         // Remove whitespace from the start and end of the keyword.
         q = q?.Trim();
@@ -201,14 +182,17 @@ public sealed class ItemController : ControllerBase
     /// <param name="count"></param>
     /// <returns></returns>
     [HttpGet("expiring")]
-    public async Task<PaginatedResult<Item>> ExpiringAsync(int page = 1, int count = 50) =>
-        await _itemContext.Items
+    public async Task<PaginatedResult<Item>> ExpiringAsync(int page = 1, int count = 50)
+    {
+        var oneWeek = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7));
+        return await _itemContext.Items
                           .AsNoTracking()
                           .Where(x => !x.Deleted &&
                                       x.ExpirationDate.HasValue &&
-                                      (DateTime.UtcNow - x.ExpirationDate.Value.ToDateTime(TimeOnly.MinValue)) < TimeSpan.FromDays(7))
+                                      (oneWeek > x.ExpirationDate.Value))
                           .OrderBy(x => x.ExpirationDate)
                           .PaginateAsync(page, count);
+    }
 
     /// <summary>
     /// Gets items that have been soft deleted.

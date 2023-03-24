@@ -1,0 +1,51 @@
+@inject IMessageService MessageService
+@implements IDisposable
+@using System.Collections.Concurrent
+
+@* Peek the first item in the queue. *@
+@if (messages.TryPeek(out var message))
+{
+    <div class="fixed inset-0 z-50 flex justify-center h-screen p-6 pointer-events-none">
+        <div class="relative max-w-2xl p-2 bg-white shadow-lg pointer-events-auto md:p-5 grow h-44 rounded-2xl">
+            <button @onclick=OnClose
+                class="absolute top-0 right-0 p-2 m-2 transition ease-in-out delay-150 hover:scale-125">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+
+            </button>
+            <div>
+                @if (message.Item1 is MessageLevel.Error)
+                {
+                    <div class="text-2xl font-semibold text-rose-500">Error</div>
+                }
+                <div>
+                    @message.Item2
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    ConcurrentQueue<(MessageLevel, string)> messages = new();
+
+    protected override void OnInitialized() =>
+        // Subscribe to event.
+        MessageService.MessageReceived += MessageReceived;
+
+    void MessageReceived(MessageLevel level, string message)
+    {
+        // When a message comes in, add it to the queue. 
+        messages.Enqueue((level, message));
+        StateHasChanged();
+    }
+
+    void OnClose() =>
+        messages.TryDequeue(out _);
+
+    public void Dispose() =>
+        // Unsubscribe from event.
+        MessageService.MessageReceived -= MessageReceived;
+}

@@ -3,18 +3,27 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 
+/// <summary>
+/// Provides authentication state support.
+/// </summary>
 public class CustomAuthStateProvider : AuthenticationStateProvider
 {
     private readonly IAuthService _authService;
     private readonly IMessageService _messageService;
     private string? _currentUser;
 
+    /// <summary>
+    /// Creates a new 
+    /// </summary>
+    /// <param name="authService">From DI container.</param>
+    /// <param name="messageService">From DI container.</param>
     public CustomAuthStateProvider(IAuthService authService, IMessageService messageService)
     {
         _authService = authService;
         _messageService = messageService;
     }
 
+    /// <inheritdoc/>
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
         ClaimsIdentity identity = new();
@@ -24,7 +33,7 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
             if (userInfo is not null)
             {
                 Claim[] claims = { new(ClaimTypes.Name, userInfo) };
-                identity = new(claims, "Server Authentication");
+                identity = new(claims, "auth");
             }
         }
         catch (HttpRequestException)
@@ -34,6 +43,7 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
         return new(new(identity));
     }
 
+    /// <inheritdoc/>
     private async Task<string?> CurrentAsync()
     {
         if (_currentUser is null)
@@ -41,14 +51,16 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
         return _currentUser;
     }
 
-    public async Task Logout()
+    /// <inheritdoc/>
+    public async Task LogoutAsync()
     {
         await _authService.LogoutAsync();
         _currentUser = null;
         NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
     }
 
-    public async Task<bool> Login(string username, string password)
+    /// <inheritdoc/>
+    public async Task<bool> LoginAsync(string username, string password)
     {
         var res = await _authService.LoginAsync(username, password);
         NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());

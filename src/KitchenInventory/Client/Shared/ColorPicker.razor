@@ -1,0 +1,29 @@
+﻿<div class="flex flex-wrap items-center justify-center p-2 rounded-md shadow-lg gap-x-1">
+    <div class="w-6 h-6 mr-1 rounded-sm" style="background-color:@Color" />
+    @foreach (var color in colors)
+    {
+        <div class="w-5 h-5 rounded-full" style="background-color: @color" @onclick="() => SelectAsync(color)" />
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Color { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<string> ColorChanged { get; set; }
+
+    List<string> colors = new()
+    {
+        // This list can be expanded later on.
+        "#ff3300",
+        "#ff9933",
+        "#ffff66",
+        "#00cc00",
+        "#3366ff",
+        "#9966ff"
+    };
+
+    Task SelectAsync(string color) =>
+    ColorChanged.InvokeAsync(color);
+}

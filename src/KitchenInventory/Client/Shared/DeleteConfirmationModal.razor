@@ -1,0 +1,35 @@
+<div @onclick=OnClosed class="fixed inset-0 z-40 flex flex-col items-center justify-center h-screen bg-gray-800/25">
+    <div @onclick:stopPropagation="true"
+        class="flex flex-col items-center justify-center w-3/4 p-3 text-lg bg-white sm:1/2 gap-y-3 rounded-2xl">
+        <h1 class="font-bold">Are you sure you want to delete @Name?</h1>
+        @if (ConfirmationName is not null)
+        {
+            <h2>Type "@ConfirmationName" to confirm deletion</h2>
+            <input @bind:event="oninput" @bind=text class="px-2 py-1 bg-gray-100 rounded-lg focus:outline-none" />
+        }
+        <div class="flex gap-x-3">
+            <button @onclick=OnClosed class="px-2 py-1 font-semibold text-white bg-gray-400 rounded-lg">Cancel</button>
+            <button @onclick=OnDelete disabled=@(!Enabled)
+                class="px-2 py-1 font-semibold text-white rounded-lg @(Enabled ? "bg-rose-500 hover:bg-rose-600": "bg-rose-200") ">Delete</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    // Component parameters.
+    [Parameter]
+    public EventCallback OnClosed { get; set; }
+
+    [Parameter]
+    public string? ConfirmationName { get; set; }
+
+    [Parameter]
+    public string Name { get; set; } = "this item";
+
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+
+    string text = string.Empty;
+
+    bool Enabled => ConfirmationName is null || text == ConfirmationName;
+}

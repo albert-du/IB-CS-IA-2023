@@ -1,9 +1,519 @@
 ﻿@page "/"
+@inject NavigationManager NavigationManager
+@inject IItemService ItemService
+@inject ICategoryService CategoryService
+@inject ILocationService LocationService
 
-<PageTitle>Index</PageTitle>
+@* Home page for the application. Create, delete, and update categories and locations here.*@
 
-<h1>Hello, world!</h1>
+<PageTitle>Home</PageTitle>
 
-Welcome to your new app.
+@if (deletion is EventCallback callback)
+{
+    @* If sometings being deleted *@
+    <DeleteConfirmationModal ConfirmationName=@deleteName OnClosed=ClearModal OnDelete=(EventCallback)callback />
+}
+else if (Modal)
+{
+    @* Showing an modal overlay. *@
+    <div @onclick=ClearModal @onclick:stopPropagation="true" class="fixed inset-0 z-40 flex flex-col items-center justify-center h-screen bg-gray-800/25">
+        @if (newItem)
+        {
+            @* Creating a new item. *@
+            <EditForm @onclick:stopPropagation="true" Model=itemModel OnValidSubmit=SubmitCreateNewItemAsync class="flex flex-col items-center justify-center w-3/4 p-3 text-lg bg-white sm:1/2 gap-y-3 rounded-2xl">
+                <div class="flex flex-col justify-center w-full text-2xl sm:items-center gap-y-1 gap-x-1">
+                    <label for="name" class="font-semibold text-slate-800">Name:</label>
+                    <InputText @bind-Value=itemModel.Name id="name" class="w-full px-2 py-1 text-center bg-gray-100 rounded-lg sm:w-1/2 focus:outline-none" />
+                </div>
+                <div class="flex flex-col justify-center w-full text-xl sm:items-center">
+                    <label for="description" class="font-semibold text-slate-800">Description</label>
+                    <InputTextArea @bind-Value=itemModel.Description
+                        id="description"
+                        class="w-full h-32 p-1 bg-gray-100 rounded-lg resize-none sm:w-1/2 focus:outline-none"/>
+                </div>
+                <div class="flex flex-col w-full h-16 sm:items-center">
+                    <div class="flex text-xl justify-self-start gap-x-3">
+                        <label for="has-expiration" class="font-semibold text-slate-800">Has Expiration</label>
+                        <InputCheckbox @bind-Value=itemModel.HasExpiration />
+                    </div>
+                    @if (itemModel.HasExpiration)
+                    {
+                        <div class="flex justify-between pl-4">
+                            <label for="expiration-date" class="text-slate-800">Date:</label>
+                            <InputDate @bind-Value=itemModel.Expiration id="expiration-date" />
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="pl-4">No expiration set.</div>
+                    }
+                </div>
+                <div class="flex items-center justify-between w-full py-1 gap-x-1 sm:justify-center">
+                    <label for="category" class="text-xl font-semibold text-slate-800">Category</label>
+                    <InputSelect @bind-Value=itemModel.Category id="category" class="w-1/2 px-2 rounded-lg text-md sm:w-36" >
+                        <option value="">No category</option>
+                        @* Render available categories. *@
+                        @if (categories is not null)
+                        {
+                            @foreach (var item in categories)
+                            {
+                                @* Keep the option value as a string of the Id. *@
+                                <option value="@item.Id.ToString()">@item.Name</option>
+                            }
+                        }
+                    </InputSelect>
+                </div>
+                <div class="flex items-center justify-between w-full py-1 gap-x-1 sm:justify-center">
+                    <label for="location" class="text-xl font-semibold text-slate-800">Location</label>
+                    <InputSelect id="location" @bind-Value=itemModel.Location class="w-1/2 px-2 rounded-lg text-md sm:w-36">
+                        <option value="">No location</option>
+                        @* Render available loctions. *@
+                        @if (locations is not null)
+                        {
+                            @foreach (var item in locations)
+                            {
+                                @* Keep the option value as a string of the Id. *@
+                                <option value="@item.Id.ToString()">@item.Name</option>
+                            }
+                        }
+                    </InputSelect>
+                </div>
+                <button disabled=@modalFormDisabled type="submit"
+                    class="px-4 py-1 my-2 font-bold text-white bg-indigo-500 rounded-lg">Create</button>
+                @* Show validation errors. *@
+                <div class="font-semibold text-rose-500">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                </div>
+            </EditForm>
+        }
+        else if (newLocation)
+        {
+            @* Creating a new location. *@
+            <EditForm @onclick:stopPropagation="true" Model=locationModel OnValidSubmit=SubmitCreateNewLocationAsync
+                class="flex flex-col items-center justify-center w-3/4 p-3 text-lg bg-white sm:1/2 gap-y-3 rounded-2xl">
+                <div class="flex flex-col justify-center w-full text-2xl sm:items-center gap-y-1 gap-x-1">
+                    <label for="name" class="font-semibold text-slate-800">Name:</label>
+                    <InputText @bind-Value=locationModel.Name id="name"
+                        class="w-full px-2 py-1 text-center bg-gray-100 rounded-lg sm:w-1/2 focus:outline-none"  />
+                </div>
+                <div class="flex flex-col justify-center w-full text-2xl sm:items-center gap-y-1 gap-x-1">
+                    <ColorPicker Color=@locationModel.Color ColorChanged="color => locationModel.Color = color" />
+                </div>
+                <button disabled=@modalFormDisabled type="submit"
+                    class="px-4 py-1 my-2 font-bold text-white bg-indigo-500 rounded-lg">Create</button>
+                @* Show validation errors *@
+                <div class="font-semibold text-rose-500">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                </div>
+            </EditForm>
+        }
+        else if (newCategory)
+        {
+            @* Creating a new category. *@
+            <EditForm @onclick:stopPropagation="true" Model=categoryModel OnValidSubmit=SubmitCreateNewCategoryAsync
+                class="flex flex-col items-center justify-center w-3/4 p-3 text-lg bg-white sm:1/2 gap-y-3 rounded-2xl">
+                <div class="flex flex-col justify-center w-full text-2xl sm:items-center gap-y-1 gap-x-1">
+                    <label class="font-semibold text-slate-800" for="name">Name:</label>
+                    <InputText @bind-Value=categoryModel.Name
+                        class="w-full px-2 py-1 text-center bg-gray-100 rounded-lg sm:w-1/2 focus:outline-none" id="name" />
+                </div>
+                <div class="flex flex-col justify-center w-full text-2xl sm:items-center gap-y-1 gap-x-1">
+                    <ColorPicker Color=@categoryModel.Color ColorChanged="color => categoryModel.Color = color" />
+                </div>
+                <button disabled=@modalFormDisabled type="submit"
+                    class="px-4 py-1 my-2 font-bold text-white bg-indigo-500 rounded-lg">Create</button>
+                @* Show validation errors. *@
+                <div class="font-semibold text-rose-500">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                </div>
+            </EditForm>
+        }
+        else if (editLocation.HasValue)
+        {
+            @* Editing a location. *@
+            <EditForm @onclick:stopPropagation="true" Model=locationModel OnValidSubmit=SubmitEditLocationAsync
+                class="relative flex flex-col items-center justify-center w-3/4 p-3 text-lg bg-white sm:1/2 gap-y-3 rounded-2xl">
+                <button @onclick="() => DeleteLocationAsync(editLocation.Value)" type="button"
+                    class="absolute top-0 right-0 p-1 m-2 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white">
+                    @* https://heroicons.com/ *@
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                        <path fill-rule="evenodd"
+                            d="M16.5 4.478v.227a48.816 48.816 0 013.878.512.75.75 0 11-.256 1.478l-.209-.035-1.005 13.07a3 3 0 01-2.991 2.77H8.084a3 3 0 01-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 01-.256-1.478A48.567 48.567 0 017.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 013.369 0c1.603.051 2.815 1.387 2.815 2.951zm-6.136-1.452a51.196 51.196 0 013.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 00-6 0v-.113c0-.794.609-1.428 1.364-1.452zm-.355 5.945a.75.75 0 10-1.5.058l.347 9a.75.75 0 101.499-.058l-.346-9zm5.48.058a.75.75 0 10-1.498-.058l-.347 9a.75.75 0 001.5.058l.345-9z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <div class="flex flex-col justify-center w-full text-2xl sm:items-center gap-y-1 gap-x-1">
+                    <label for="name" class="font-semibold text-slate-800" >Name:</label>
+                    <InputText id="name" class="w-full px-2 py-1 text-center bg-gray-100 rounded-lg sm:w-1/2 focus:outline-none"
+                @bind-Value=locationModel.Name />
+                </div>
+                <div class="flex flex-col justify-center w-full text-2xl sm:items-center gap-y-1 gap-x-1">
+                    <ColorPicker Color=@locationModel.Color ColorChanged="color => locationModel.Color = color" />
+                </div>
+                <button disabled=@modalFormDisabled type="submit" class="px-4 py-1 my-2 font-bold text-white bg-indigo-500 rounded-lg"
+                    >Save</button>
+                @* Show validation errors. *@
+                <div class="font-semibold text-rose-500">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                </div>
+            </EditForm>
+        }
+        else if (editCategory.HasValue)
+        {
+            @* Editing a category. *@
+            <EditForm @onclick:stopPropagation="true" Model=categoryModel OnValidSubmit=SubmitEditCategoryAsync
+                class="relative flex flex-col items-center justify-center w-3/4 p-3 text-lg bg-white sm:1/2 gap-y-3 rounded-2xl">
+                <button @onclick="() => DeleteCategoryAsync(editCategory.Value)" type="button"
+                    class="absolute top-0 right-0 p-1 m-2 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white">
+                    @* https://heroicons.com/ *@
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                        <path fill-rule="evenodd"
+                            d="M16.5 4.478v.227a48.816 48.816 0 013.878.512.75.75 0 11-.256 1.478l-.209-.035-1.005 13.07a3 3 0 01-2.991 2.77H8.084a3 3 0 01-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 01-.256-1.478A48.567 48.567 0 017.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 013.369 0c1.603.051 2.815 1.387 2.815 2.951zm-6.136-1.452a51.196 51.196 0 013.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 00-6 0v-.113c0-.794.609-1.428 1.364-1.452zm-.355 5.945a.75.75 0 10-1.5.058l.347 9a.75.75 0 101.499-.058l-.346-9zm5.48.058a.75.75 0 10-1.498-.058l-.347 9a.75.75 0 001.5.058l.345-9z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <div class="flex flex-col justify-center w-full text-2xl sm:items-center gap-y-1 gap-x-1">
+                    <label for="name" class="font-semibold text-slate-800">Name:</label>
+                    <InputText id="name" class="w-full px-2 py-1 text-center bg-gray-100 rounded-lg sm:w-1/2 focus:outline-none"
+                @bind-Value=categoryModel.Name />
+                </div>
+                <div class="flex flex-col justify-center w-full text-2xl sm:items-center gap-y-1 gap-x-1">
+                    <ColorPicker Color=@categoryModel.Color ColorChanged="color => categoryModel.Color = color" />
+                </div>
+                <button disabled=@modalFormDisabled type="submit" class="px-4 py-1 my-2 font-bold text-white bg-indigo-500 rounded-lg"
+                    >Save</button>
+                @* Show validation errors. *@
+                <div class="font-semibold text-rose-500">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                </div>
+            </EditForm>
+        }
+    </div>
+}
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+@* Primary user interface. *@
+<h1 class="pb-16 text-5xl font-semibold sm:text-4xl sm:py-0 text-sky-900">Kitchen Inventory</h1>
+<div class="sm:w-1/2">
+    <div class="flex flex-col mt-5 sm:mt-2">
+        <button @onclick=NewItem
+            class="flex justify-between px-3 py-2 text-lg font-bold text-white bg-indigo-600 rounded-xl">
+            Add Item
+        </button>
+    </div>
+    <div class="flex flex-col mt-5 sm:mt-2">
+        <div class="pb-2 text-xl font-semibold">
+            Categories
+        </div>
+        <div class="flex flex-col overflow-y-scroll">
+            <div class="flex flex-col gap-3">
+                @if (categories is null)
+                {
+                    <div>Loading</div>
+                }
+                else
+                {
+                    @* Render categories. *@
+                    @foreach (var category in categories)
+                    {
+                        <div 
+                    @onclick="@(() => NavigationManager.NavigateTo($"/category/{category.Id}?name={category.Name}"))"
+                    role="button"
+                            style="background-color: @category.Color"
+                            class="flex justify-between px-3 py-2 text-lg font-bold text-white rounded-xl">
+                            @category.Name
+                            <button @onclick="() => EditCategory(category)" class="p-1" @onclick:stopPropagation="true">
+                                @* https://heroicons.com/ *@
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                    stroke="currentColor" class="w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                                </svg>
+                            </button>
+                        </div>
+                    }
+                }
+            </div>
+            <button @onclick="NewCategory"
+                class="self-end py-3 pt-2 font-semibold text-gray-500 hover:underline active:text-gray-700">
+                Add New Category
+            </button>
+        </div>
+    </div>
+    <div class="flex flex-col mt-5 sm:mt-2">
+        <div class="pb-2 text-xl font-semibold">
+            Location
+        </div>
+        <div class="flex flex-col overflow-y-scroll">
+            <div class="flex flex-col gap-3">
+                @if (locations is null)
+                {
+                    <div>Loading</div>
+                }
+                else
+                {
+                    @foreach (var location in locations)
+                    {
+                        <div role="button"
+                    @onclick="@(() => NavigationManager.NavigateTo($"/location/{location.Id}?name={location.Name}"))"
+                            style="background-color: @location.Color"
+                            class="flex justify-between px-3 py-2 text-lg font-bold text-white rounded-xl">
+                            @location.Name
+                            <button class="p-1" @onclick:stopPropagation="true" @onclick="() => EditLocation(location)">
+                                @* https://heroicons.com/ *@
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                    stroke="currentColor" class="w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                                </svg>
+                            </button>
+                        </div>
+                    }
+                }
+                <button @onclick=NewLocation
+                    class="self-end py-3 pt-2 font-semibold text-gray-500 hover:underline active:text-gray-700">
+                    Add New Location
+                </button>
+            </div>
+        </div>
+        <div class="flex flex-col gap-3 mt-5 sm:mt-2">
+            <a href="all-items"
+                class="flex justify-between px-3 py-2 text-lg font-bold text-white bg-blue-400 rounded-xl">
+                <div>View all items</div>
+            </a>
+            <a href="history"
+                class="flex justify-between px-3 py-2 text-lg font-bold text-white bg-blue-400 rounded-xl">
+                <div>View deleted items</div>
+            </a>
+        </div>
+    </div>
+</div>
+
+@code {
+    List<Category>? categories;
+    List<Location>? locations;
+
+    bool newItem;
+    bool newCategory;
+    bool newLocation;
+    Guid? editCategory;
+    Guid? editLocation;
+    bool modalFormDisabled = false;
+
+    ItemModel itemModel = new();
+    LocationModel locationModel = new();
+    CategoryModel categoryModel = new();
+
+    EventCallback? deletion;
+    string? deleteName;
+
+    // The modal needs to be shown.
+    bool Modal => newItem || newCategory || newLocation || editCategory.HasValue || editLocation.HasValue;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load categories and locations
+        categories = (await CategoryService.AllAsync()).ToList();
+        locations = (await LocationService.AllAsync()).ToList();
+    }
+
+    // Resets the UI.
+    void ClearModal()
+    {
+        // Hide the modal
+        modalFormDisabled = false;
+
+        // Create
+        newItem = false;
+        newCategory = false;
+        newLocation = false;
+
+        // Update
+        editCategory = null;
+        editLocation = null;
+
+        // Hide the delete confirmation.
+        deletion = null;
+        deleteName = null;
+    }
+
+    void NewItem()
+    {
+        ClearModal();
+        newItem = true;
+        itemModel = new();
+    }
+
+    void NewCategory()
+    {
+        ClearModal();
+        newCategory = true;
+        categoryModel = new();
+    }
+
+    void NewLocation()
+    {
+        ClearModal();
+        newLocation = true;
+        locationModel = new();
+    }
+
+    void EditCategory(Category category)
+    {
+        ClearModal();
+        editCategory = category.Id;
+        categoryModel = new()
+        {
+            Color = category.Color,
+            Name = category.Name
+        };
+    }
+
+    void EditLocation(Location location)
+    {
+        ClearModal();
+        editLocation = location.Id;
+        locationModel = new()
+        {
+            Color = location.Color,
+            Name = location.Name
+        };
+    }
+
+    // Form submition methods.
+    async Task SubmitCreateNewItemAsync()
+    {
+        modalFormDisabled = true;
+        await InvokeAsync(StateHasChanged);
+
+        var date =
+        itemModel.HasExpiration
+        ? (DateOnly?)DateOnly.FromDateTime(itemModel.Expiration)
+        : null;
+        var item = await ItemService.CreateAsync(new(itemModel.Name, itemModel.Description, date, itemModel.CategoryId,
+        itemModel.LocationId, itemModel.Deleted));
+        if (item is not null)
+            ClearModal();
+        modalFormDisabled = false;
+    }
+
+    async Task SubmitCreateNewLocationAsync()
+    {
+        modalFormDisabled = true;
+        await InvokeAsync(StateHasChanged);
+        var location = await LocationService.CreateAsync(new(locationModel.Color, locationModel.Name));
+        if (location is not null)
+        {
+            ClearModal();
+            locations?.Add(location);
+        }
+        modalFormDisabled = false;
+    }
+
+    async Task SubmitCreateNewCategoryAsync()
+    {
+        modalFormDisabled = true;
+        await InvokeAsync(StateHasChanged);
+        var category = await CategoryService.CreateAsync(new(categoryModel.Color, categoryModel.Name));
+        if (category is not null)
+        {
+            ClearModal();
+            categories?.Add(category);
+        }
+        modalFormDisabled = false;
+    }
+
+    async Task SubmitEditLocationAsync()
+    {
+        if (locations is null || editLocation is null)
+            return;
+
+        modalFormDisabled = true;
+        await InvokeAsync(StateHasChanged);
+
+        var id = editLocation.Value;
+        var location = await LocationService.UpdateAsync(id, new(locationModel.Color, locationModel.Name));
+
+        if (location is not null)
+        {
+            ClearModal();
+            var index = locations.FindIndex(x => x.Id == id);
+            if (index != -1)
+                locations[index] = location;
+        }
+        modalFormDisabled = false;
+    }
+
+    async Task SubmitEditCategoryAsync()
+    {
+        if (categories is null || editCategory is null)
+            return;
+
+        modalFormDisabled = true;
+        await InvokeAsync(StateHasChanged);
+
+        var id = editCategory.Value;
+        var category = await CategoryService.UpdateAsync(id, new(categoryModel.Color, categoryModel.Name));
+
+        if (category is not null)
+        {
+            ClearModal();
+            var index = categories.FindIndex(x => x.Id == id);
+            if (index is not -1)
+                categories[index] = category;
+        }
+        modalFormDisabled = false;
+    }
+
+    async Task DeleteCategoryAsync(Guid id)
+    {
+        if (categories is null)
+            return;
+
+        var index = categories.FindIndex(x => x.Id == id);
+        if (index is -1)
+            return;
+
+        modalFormDisabled = true;
+        await InvokeAsync(StateHasChanged);
+
+        deleteName = categories[index].Name;
+        deletion = EventCallback.Factory.Create(this, async () =>
+        {
+            if (await CategoryService.DeleteAsync(id))
+            {
+                ClearModal();
+                categories.RemoveAt(index);
+                await InvokeAsync(StateHasChanged);
+            }
+        });
+    }
+
+    async Task DeleteLocationAsync(Guid id)
+    {
+        if (locations is null)
+            return;
+
+        var index = locations.FindIndex(x => x.Id == id);
+        if (index is -1)
+            return;
+
+        modalFormDisabled = true;
+        await InvokeAsync(StateHasChanged);
+
+        deleteName = locations[index].Name;
+        deletion = EventCallback.Factory.Create(this, async () =>
+        {
+            if (await LocationService.DeleteAsync(id))
+            {
+                ClearModal();
+                locations.RemoveAt(index);
+                await InvokeAsync(StateHasChanged);
+            }
+        });
+    }
+}

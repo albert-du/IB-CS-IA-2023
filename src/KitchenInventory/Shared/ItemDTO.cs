@@ -10,4 +10,4 @@ namespace KitchenInventory.Shared;
 /// <param name="Location">The optional location of the item.</param>
 /// <param name="Deleted">The deletion status of the item.</param>
 /// <returns>A new domain transfer object</returns>
-public sealed record ItemDTO(string Name, string? Description, DateOnly Expiration, Guid? Category, Guid? Location, bool Deleted = false);
+public sealed record ItemDTO(string Name, string? Description, DateOnly? Expiration, Guid? Category, Guid? Location, bool Deleted = false);

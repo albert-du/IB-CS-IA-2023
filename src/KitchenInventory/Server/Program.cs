@@ -1,15 +1,14 @@
 global using KitchenInventory.Shared;
-global using KitchenInventory.Server;
 global using KitchenInventory.Server.Services;
 global using KitchenInventory.Server.Models;
 using System.Reflection;
 using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Filters;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http.Extensions; 
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +25,10 @@ builder.Services.Configure<JWTOptions>(builder.Configuration.GetSection(JWTOptio
 builder.Services.AddSingleton<IAuthService, MockAuthService>();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-builder.Services.AddControllersWithViews(options => options.SuppressAsyncSuffixInActionNames = false);
+builder.Services.AddControllersWithViews(options =>
+{
+    options.SuppressAsyncSuffixInActionNames = false;
+});
 
 builder.Services.AddRazorPages();
 
@@ -96,12 +98,9 @@ app.UseHttpsRedirection();
 
 app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 app.MapRazorPages();
 app.MapFallbackToFile("index.html");

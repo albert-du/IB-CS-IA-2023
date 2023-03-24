@@ -1,17 +1,60 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@inject CustomAuthStateProvider AuthStateProvider
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<MessageBox />
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
+<AuthorizeView>
+    <Authorized>
+        <main class="pb-10">
+            <article class="flex flex-col p-5 sm:items-center">
+                @Body
+            </article>
+        </main>
+        <footer class="fixed inset-x-0 bottom-0 z-20 w-full">
+            <NavMenu/>
+        </footer>
+    </Authorized>
+    <NotAuthorized>
+        <main class="pb-10">
+            <article class="flex flex-col p-5 sm:items-center">
+                <h1 class="text-5xl font-semibold text-sky-900">Kitchen Inventory</h1>
+                <p class="text-2xl text-sky-900">Please log in to continue</p>
+                <EditForm class="flex flex-col justify-center" Context="editformctx" Model=@loginModel OnValidSubmit=@LoginAsync>
+                    <div class="flex flex-col">
+                        <label for="username">Username</label>
+                        <InputText class="px-2 py-1 rounded-lg focus:outline-none" id="username" @bind-Value="loginModel.Username" />
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="password">Password</label>
+                        <InputText class="px-2 py-1 rounded-lg focus:outline-none" type="password" id="password" @bind-Value="loginModel.Password" />
+                    </div>
+                    <div class="flex justify-center py-2">
+                        <button class="p-2 font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600" type="submit" disabled="@pressed">Login</button>
+                    </div>
+                    <div class="font-semibold text-rose-500">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <p class="text-red-500">@error</p>
+                    </div>
+                </EditForm>
+            </article>
+        </main>
+    </NotAuthorized>
+</AuthorizeView>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+@code {
+    LoginModel loginModel = new();
+    bool pressed = false;
+    string? error = null;
+
+    async Task LoginAsync()
+    {
+        pressed = true;
+        await InvokeAsync(StateHasChanged);
+        if (!await AuthStateProvider.LoginAsync(loginModel.Username, loginModel.Password))
+            error = "Invalid username or password";
+        loginModel.Password = string.Empty;
+        pressed = false;
+    }
+}

@@ -9,7 +9,6 @@ using Microsoft.Extensions.Options;
 using KitchenInventory.Server.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization;
 
 /// <summary>
 /// Controller for authenticating users.
@@ -92,12 +91,9 @@ public sealed class AuthController : ControllerBase
     /// Gets available information on the current user.
     /// </summary>
     /// <returns></returns>
-    [Authorize]
     [HttpGet("current")]
     public IActionResult CurrentUserInfo() =>
-        Ok(new
-        {
-            UserName = User?.Identity?.Name,
-            Claims = User?.Claims.ToDictionary(c => c.Type, c => c.Value)
-        });
+        User?.Identity?.IsAuthenticated is true
+        ? Ok(new UserInfo(User?.Identity?.Name, User?.Claims.ToDictionary(c => c.Type, c => c.Value)))
+        : Unauthorized();
 }

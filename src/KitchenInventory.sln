@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KitchenInventory.Server", "KitchenInventory\Server\KitchenInventory.Server.csproj", "{426E062F-3E0D-4E33-BA3A-8B3D45A6E29E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KitchenInventory.Server", "KitchenInventory\Server\KitchenInventory.Server.csproj", "{426E062F-3E0D-4E33-BA3A-8B3D45A6E29E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KitchenInventory.Client", "KitchenInventory\Client\KitchenInventory.Client.csproj", "{5131924E-5468-4E8E-819B-5659A2E256C7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KitchenInventory.Client", "KitchenInventory\Client\KitchenInventory.Client.csproj", "{5131924E-5468-4E8E-819B-5659A2E256C7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KitchenInventory.Shared", "KitchenInventory\Shared\KitchenInventory.Shared.csproj", "{0D391281-C07E-4B24-B12D-D862842383E0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KitchenInventory.Shared", "KitchenInventory\Shared\KitchenInventory.Shared.csproj", "{0D391281-C07E-4B24-B12D-D862842383E0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

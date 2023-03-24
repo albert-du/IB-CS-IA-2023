@@ -42,10 +42,10 @@ public sealed class Item
     /// </summary>
     public Guid? CategoryId { get; set; }
 
-    [JsonIgnore]
     /// <summary>
     /// The (optional) category of the item.
     /// </summary>
+    [JsonIgnore]
     public Category? Category { get; set; }
 
     /// <summary>
@@ -54,10 +54,10 @@ public sealed class Item
     /// <value></value>
     public Guid? LocationId { get; set; }
 
-    [JsonIgnore]
     /// <summary>
     /// The (optional) location of the item.
     /// </summary>
     /// <value></value>
+    [JsonIgnore]
     public Location? Location { get; set; }
 }

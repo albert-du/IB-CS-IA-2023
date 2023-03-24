@@ -1,0 +1,3 @@
+@* This is an extention of InputText that binds to the "oninput" event instead of the "onchange" event. *@
+@inherits InputText
+<input @attributes="@AdditionalAttributes" @bind="@CurrentValueAsString" @bind:event="oninput" class="@CssClass" />

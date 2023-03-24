@@ -1,0 +1,80 @@
+@page "/search"
+@inject IItemService ItemService
+@inject ILocationService LocationService
+@inject ICategoryService CategoryService
+@inject NavigationManager NavigationManager
+
+@* Allows the user to query for items. *@
+
+<PageTitle>Items</PageTitle>
+
+<h1 class="pb-16 text-5xl font-semibold sm:pb-10 sm:text-4xl text-sky-900">Search</h1>
+<div class="sm:w-1/2">
+    <div class="flex mb-3 gap-x-1">
+        <input @bind=search @bind:event="oninput" @onkeypress=Pressed class="w-3/4 px-2 py-1 text-lg bg-gray-200 rounded-xl focus:outline-none" />
+        <button @onclick=StartSearch class="w-1/4 p-2 font-semibold text-white bg-sky-400 rounded-2xl">Search</button>
+    </div>
+    @if (Query is null)
+    {
+        @* Show message to user if there is no query parameter. *@
+        <div class="pt-6 text-lg italic">Search for items by name or description</div>
+    }
+    else if (items is null)
+    {
+        @* Show a loading if a query is given but items has not been populated. *@
+        <div>Loading...</div>
+    }
+    else if (items.Count is 0)
+    {
+        @* Show a message to inform the results that there are no results. *@
+        <div class="pt-6 text-lg">No results for "@Query"</div>
+    }
+    else
+    {
+        @* Render items. *@
+        <ItemsListView Items=items Locations=referenceLocations Categories=referenceCategories/>
+    }
+</div>
+
+@code {
+    private string? search;
+    PaginatedResult<Item>? items;
+    Dictionary<Guid, Location> referenceLocations = new();
+    Dictionary<Guid, Category> referenceCategories = new();
+
+    // Parameters filled in from the url
+    [Parameter, SupplyParameterFromQuery]
+    public int? Page { get; set; }
+
+    [Parameter, SupplyParameterFromQuery]
+    public int? Count { get; set; } = 50;
+
+    [Parameter, SupplyParameterFromQuery]
+    public string? Query { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Query is null)
+            return;
+            
+        // Load categories, locations, and items.
+        search = Query;
+        referenceCategories = (await CategoryService.AllAsync()).ToDictionary(x => x.Id);
+        referenceLocations = (await LocationService.AllAsync()).ToDictionary(x => x.Id);
+        items = await ItemService.SearchAsync(Page ?? 1, Count ?? 50, search: Query);
+    }
+
+    void Pressed(KeyboardEventArgs ea)
+    {
+        // Search if the enter key is pressed.
+        if (ea.Key is "Enter")
+            StartSearch();
+    }
+
+    void StartSearch()
+    {
+        if (!string.IsNullOrWhiteSpace(search))
+            // Navigate, include the search as a parameter.
+            NavigationManager.NavigateTo(NavigationManager.GetUriWithQueryParameter(nameof(Query), search));
+    }
+}

@@ -1,0 +1,277 @@
+﻿@inject IItemService ItemService
+@inject NavigationManager NavigationManager
+
+@* Deletion confirmation. *@
+@if (deletion is EventCallback callback)
+{
+    @if (PermanentDelete)
+    {
+        <DeleteConfirmationModal Name=@deleteName ConfirmationName=@deleteName OnClosed=ClearModal
+    OnDelete=(EventCallback)callback />
+    }
+    else
+    {
+        <DeleteConfirmationModal Name=@deleteName OnClosed=ClearModal OnDelete=(EventCallback)callback />
+    }
+}
+@* Item viewing/editing. *@
+else if (viewingItem is not null)
+{
+    <div @onclick=ClearModal @onclick:stopPropagation="true"
+        class="fixed inset-0 z-40 flex flex-col items-center justify-center h-screen bg-gray-800/25">
+
+        <EditForm @onclick:stopPropagation="true" Model=detailItem OnValidSubmit=SaveAsync
+            class="relative flex flex-col items-center justify-center w-3/4 p-3 text-lg bg-white sm:1/2 gap-y-3 rounded-2xl">
+            @if (PermanentDelete)
+            {
+                <button type="button" @onclick=DeleteAsync
+                    class="absolute top-0 right-0 p-1 m-2 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white">
+                    @* https://heroicons.com *@
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                        <path fill-rule="evenodd"
+                            d="M16.5 4.478v.227a48.816 48.816 0 013.878.512.75.75 0 11-.256 1.478l-.209-.035-1.005 13.07a3 3 0 01-2.991 2.77H8.084a3 3 0 01-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 01-.256-1.478A48.567 48.567 0 017.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 013.369 0c1.603.051 2.815 1.387 2.815 2.951zm-6.136-1.452a51.196 51.196 0 013.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 00-6 0v-.113c0-.794.609-1.428 1.364-1.452zm-.355 5.945a.75.75 0 10-1.5.058l.347 9a.75.75 0 101.499-.058l-.346-9zm5.48.058a.75.75 0 10-1.498-.058l-.347 9a.75.75 0 001.5.058l.345-9z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </button>
+            }
+            else
+            {
+                <button @onclick=DeleteAsync type="button" class="absolute top-0 right-0 p-2 m-3 hover:text-rose-500">
+                    @* https://heroicons.com *@
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </button>
+            }
+
+            <div class="flex flex-col justify-center w-full text-2xl sm:items-center gap-y-1 gap-x-1">
+                <label class="font-semibold text-slate-800" for="name">Name:</label>
+                <InputTextOnInput @bind-Value=detailItem.Name id="name"
+                    class="w-full px-2 py-1 text-center bg-gray-100 rounded-lg sm:w-1/2 focus:outline-none" />
+            </div>
+            <div class="flex flex-col justify-center w-full text-xl sm:items-center">
+                <label for="description" class="font-semibold text-slate-800">Description</label>
+                <InputTextAreaOnInput @bind-Value=detailItem.Description id="description"
+                    class="w-full h-32 p-1 bg-gray-100 rounded-lg resize-none sm:w-1/2 focus:outline-none" />
+            </div>
+            <div class="flex flex-col w-full h-16 sm:items-center">
+                <div class="flex text-xl justify-self-start gap-x-3">
+                    <label for="has-expiration" class="font-semibold text-slate-800">Has Expiration</label>
+                    <InputCheckbox @bind-Value=detailItem.HasExpiration />
+                </div>
+                @if (detailItem.HasExpiration)
+                {
+                    <div class="flex justify-between pl-4">
+                        <label class="text-slate-800" for="expiration-date">Date:</label>
+                        <InputDate @bind-Value=detailItem.Expiration id="expiration-date" />
+                    </div>
+                }
+                else
+                {
+                    <div class="pl-4">No expiration set.</div>
+                }
+            </div>
+            <div class="flex items-center justify-between w-full py-1 gap-x-1 sm:justify-center">
+                <label for="category" class="text-xl font-semibold text-slate-800">Category</label>
+                <InputSelect @bind-Value=@detailItem.Category class="w-1/2 px-2 rounded-lg text-md sm:w-36" id="category">
+                    <option value="">No category</option>
+                    @foreach (var item in Categories.Values)
+                    {
+                        <option value="@item.Id.ToString()">@item.Name</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="flex items-center justify-between w-full py-1 gap-x-1 sm:justify-center">
+                <label for="location" class="text-xl font-semibold text-slate-800">Location</label>
+                <InputSelect @bind-Value=@detailItem.Location class="w-1/2 px-2 rounded-lg text-md sm:w-36" id="location">
+                    <option value="">No location</option>
+                    @foreach (var item in Locations.Values)
+                    {
+                        <option value="@item.Id.ToString()">@item.Name</option>
+                    }
+                </InputSelect>
+            </div>
+            <button type="submit" disabled=@(modalFormDisabled || !Changed)
+                class="px-4 py-1 my-2 font-bold text-white rounded-lg @(Changed  ? "bg-indigo-500" : "bg-indigo-200")">Save</button>
+            <div class="font-semibold text-rose-500">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+            </div>
+        </EditForm>
+    </div>
+}
+
+@*Showing all items.*@
+<div>
+    <div aria-hidden class="w-full border-t-2 border-gray-400"></div>
+    @foreach (var item in items)
+    {
+        <div @onclick="() => ShowModal(item)" role="button"
+            class="flex justify-between px-3 py-2 text-lg font-bold text-gray-600">
+            <div>
+                <div class="text-2xl">
+                    @item.Name
+                </div>
+                <div class="italic font-normal">
+                    @item.Description
+                </div>
+            </div>
+            <div class="flex flex-col items-end">
+                @if (item.LocationId.HasValue && Locations.TryGetValue(item.LocationId.Value, out var location))
+                {
+                    <div @onclick="@(() => NavigationManager.NavigateTo($"/location/{location.Id}?name={location.Name}"))"
+                        style="color: @location.Color" role="button" class="font-medium">
+                        @location.Name
+                    </div>
+
+                }
+                @if (item.CategoryId.HasValue && Categories.TryGetValue(item.CategoryId.Value, out var category))
+                {
+                    <div @onclick="@(() => NavigationManager.NavigateTo($"/category/{category.Id}?name={category.Name}"))"
+                        style="color: @category.Color" role="button">
+                        @category.Name
+                    </div>
+
+                }
+            </div>
+        </div>
+        <div aria-hidden class="w-full border-t-2 border-gray-400"></div>
+    }
+</div>
+@* Bottom pagination information. *@
+<div class="py-2">Showing @Items.Count of @Items.TotalResultCount items.</div>
+<div class="flex justify-center gap-x-2">
+    @if (Items.Page is not 1)
+    {
+        <a href=@GenerateLink(1) class="font-bold text-center text-white bg-gray-200 rounded-md h-7 w-7">1</a>
+        @if (Items.Page is not 2)
+        {
+            <a href=@GenerateLink(Items.Page - 1)
+                class="font-bold text-center text-white bg-gray-200 rounded-md h-7 w-7">@(Items.Page - 1)</a>
+        }
+    }
+    <a class="font-bold text-center text-white bg-blue-500 rounded-md h-7 w-7">@Items.Page</a>
+    @if (Items.Page != Items.TotalPages && Items.TotalPages > 0)
+    {
+        <a href=@GenerateLink(Items.Page + 1)
+            class="font-bold text-center text-white bg-gray-200 rounded-md h-7 w-7">@(Items.Page + 1)</a>
+        @if (Items.Page != Items.TotalPages - 1)
+        {
+            <a href=@GenerateLink(Items.TotalPages)
+                class="font-bold text-center text-white bg-gray-200 rounded-md h-7 w-7">@Items.TotalPages</a>
+        }
+    }
+</div>
+
+@code {
+    // Parameters
+    [Parameter, EditorRequired]
+    public PaginatedResult<Item> Items { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyDictionary<Guid, Location> Locations { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyDictionary<Guid, Category> Categories { get; set; } = default!;
+
+    [Parameter]
+    public bool PermanentDelete { get; set; }
+
+    bool modalFormDisabled;
+
+    ItemModel detailItem = new();
+    Item? viewingItem;
+    List<Item> items = new();
+    EventCallback? deletion;
+    string? deleteName;
+
+    bool Changed =>
+        viewingItem is not null &&
+        (viewingItem.ExpirationDate.GetValueOrDefault() != 
+        (detailItem.HasExpiration ? DateOnly.FromDateTime(detailItem.Expiration) : default) ||
+        viewingItem.Name != detailItem.Name ||
+        viewingItem.Description != detailItem.Description ||
+        viewingItem.CategoryId != detailItem.CategoryId ||
+        viewingItem.LocationId != detailItem.LocationId ||
+        viewingItem.Deleted != detailItem.Deleted);
+
+    string GenerateLink(int page) =>
+        NavigationManager.GetUriWithQueryParameter(nameof(page), page);
+
+    async Task SaveAsync()
+    {
+        if (viewingItem is null)
+            return;
+        
+        modalFormDisabled = true;
+        await InvokeAsync(StateHasChanged);
+
+        var date =
+            detailItem.HasExpiration
+            ? (DateOnly?)DateOnly.FromDateTime(detailItem.Expiration)
+            : null;
+        
+        var item = await ItemService.UpdateAsync(viewingItem.Id, new(detailItem.Name, detailItem.Description, date, detailItem.CategoryId, detailItem.LocationId, detailItem.Deleted));
+        if (item is not null)
+        {
+            viewingItem = null;
+            var index = items.FindIndex(x => x.Id == item.Id);
+            if (index is not -1)
+                items[index] = item;
+        }
+        modalFormDisabled = false;
+    }
+
+    async void DeleteAsync()
+    {
+        if (viewingItem is null)
+            return;
+
+        var index = items.FindIndex(x => x.Id == viewingItem.Id);
+        if (index is -1)
+            return;
+
+        deleteName = items[index].Name;
+        deletion = EventCallback.Factory.Create(this, async () =>
+        {
+            if (PermanentDelete)
+                await ItemService.DeleteAsync(viewingItem.Id);
+            else
+            {
+                var date = detailItem.HasExpiration ? (DateOnly?)DateOnly.FromDateTime(detailItem.Expiration) : null;
+                ItemDTO x = new(detailItem.Name, detailItem.Description, date, detailItem.CategoryId, detailItem.LocationId, true);
+                var item = await ItemService.UpdateAsync(viewingItem.Id, x);
+            }
+            items.RemoveAt(index);
+            ClearModal();
+            await InvokeAsync(StateHasChanged);
+        });
+        await InvokeAsync(StateHasChanged);
+    }
+
+    void ShowModal(Item item)
+    {
+        viewingItem = item;
+        detailItem = new()
+        {
+            Name = item.Name,
+            Description = item.Description,
+            HasExpiration = item.ExpirationDate.HasValue,
+            Expiration = (item.ExpirationDate?.ToDateTime(TimeOnly.MinValue)).GetValueOrDefault(),
+            Category = item.CategoryId.ToString(),
+            Location = item.LocationId.ToString(),
+            Deleted = item.Deleted
+        };
+    }
+
+    void ClearModal()
+    {
+        deletion = null;
+        viewingItem = null;
+        modalFormDisabled = false;
+    }
+
+    protected override void OnInitialized() =>
+        items.AddRange(Items.Result);
+}

@@ -1,0 +1,43 @@
+@page "/expiring"
+@inject IItemService ItemService
+@inject ILocationService LocationService
+@inject ICategoryService CategoryService
+
+@* Show current items within 7 days of expiration, or past expiration. *@
+
+<PageTitle>Items</PageTitle>
+
+<h1 class="pb-16 text-5xl font-semibold sm:pb-10 sm:text-4xl text-sky-900">Expiring Soon</h1>
+<div class="sm:w-1/2">
+    @if (items is null)
+    {
+        <div>Loading items...</div>
+    }
+    else
+    {
+        <ItemsListView Items=items Locations=referenceLocations Categories=referenceCategories/>
+    }
+</div>
+
+@code {
+    PaginatedResult<Item>? items;
+    Dictionary<Guid, Location> referenceLocations = new();
+    Dictionary<Guid, Category> referenceCategories = new();
+
+    // Parameters filled in from the url.
+    [Parameter, SupplyParameterFromQuery]
+    public int? Page { get; set; }
+
+    [Parameter, SupplyParameterFromQuery]
+    public int? Count { get; set; } = 50;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Load category and location data for the item display.
+        referenceCategories = (await CategoryService.AllAsync()).ToDictionary(x => x.Id);
+        referenceLocations = (await LocationService.AllAsync()).ToDictionary(x => x.Id);
+        
+        // Load the items.
+        items = await ItemService.ExpiringAsync(Page ?? 1, Count ?? 50);
+    }
+}

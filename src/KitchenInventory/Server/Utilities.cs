@@ -12,6 +12,6 @@ internal static class Utilities
                         .ToListAsync();
 
         var length = await source.CountAsync();
-        return new(page, count, length, content);
+        return new(page, content.Count, length, content);
     }
 }

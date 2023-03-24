@@ -1,0 +1,57 @@
+﻿@page "/category/{id:guid}"
+@inject NavigationManager NavigationManager
+@inject IItemService ItemService
+@inject ILocationService LocationService
+@inject ICategoryService CategoryService
+
+@* This displays all the current items that are part of a given category. *@
+
+<PageTitle>Items</PageTitle>
+
+<h1 class="pb-16 text-5xl font-semibold sm:pb-10 sm:text-4xl text-sky-900">@(name ?? Name ?? "Loading...")</h1>
+<div class="sm:w-1/2">
+    @if (items is null)
+    {
+        <div>Loading items...</div>
+    }
+    else
+    {
+        <ItemsListView Items=items Locations=referenceLocations Categories=referenceCategories />
+    }
+</div>
+
+@code {
+    string? name;
+    PaginatedResult<Item>? items;
+    Dictionary<Guid, Location> referenceLocations = new();
+    Dictionary<Guid, Category> referenceCategories = new();
+
+    // Parameters are filled in from the URL.
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [Parameter, SupplyParameterFromQuery]
+    public int? Page { get; set; }
+
+    [Parameter, SupplyParameterFromQuery]
+    public int? Count { get; set; } = 50;
+
+    // This fills in the name prior to loading if it's available.
+    [Parameter, SupplyParameterFromQuery]
+    public string? Name { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Load the items and the locations and categories.
+        referenceLocations = (await LocationService.AllAsync()).ToDictionary(x => x.Id);
+        referenceCategories = (await CategoryService.AllAsync()).ToDictionary(x => x.Id);
+        items = await ItemService.SearchAsync(Page ?? 1, Count ?? 50, category: Id);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load the name if it's not available or replace it if it's already been specified. 
+        if (await CategoryService.TryReadAsync(Id) is Category category)
+            name = category.Name;
+    }
+}
