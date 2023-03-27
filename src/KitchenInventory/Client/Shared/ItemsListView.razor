@@ -258,11 +258,13 @@ else if (viewingItem is not null)
             Name = item.Name,
             Description = item.Description,
             HasExpiration = item.ExpirationDate.HasValue,
-            Expiration = (item.ExpirationDate?.ToDateTime(TimeOnly.MinValue)).GetValueOrDefault(),
             Category = item.CategoryId.ToString(),
             Location = item.LocationId.ToString(),
             Deleted = item.Deleted
         };
+        // Set the expiration only if it was provided, otherwise leave it the default.
+        if (item.ExpirationDate?.ToDateTime(TimeOnly.MinValue) is DateTime exp)
+            detailItem.Expiration = exp;
     }
 
     void ClearModal()
