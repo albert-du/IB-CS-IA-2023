@@ -8,7 +8,7 @@
 /// <param name="Count">On this page</param>
 /// <param name="TotalResultCount">Total results.</param>
 /// <param name="Result">List of items.</param>
-public record PaginatedResult<T>(int Page, int Count, int TotalResultCount, IReadOnlyList<T> Result)
+public sealed record PaginatedResult<T>(int Page, int Count, int TotalResultCount, IReadOnlyList<T> Result)
 {
     /// <summary>
     /// An empty paginated list.

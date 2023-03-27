@@ -19,9 +19,6 @@ public class AuthService : IAuthService
     }
 
     /// <inheritdoc/>
-    public Task<bool> AuthenticateAsync(string username, string password)
-    {
-        Console.WriteLine(options.Username + "saddsadsadsa" + options.Password);
-        return Task.FromResult(options.Username == username && options.Password == password);
-    }
+    public Task<bool> AuthenticateAsync(string username, string password) =>
+        Task.FromResult(options.Username == username && options.Password == password);
 }

@@ -17,3 +17,11 @@ This is an application to inventory items in your kitchen.
 * [SQLite](https://www.sqlite.org/index.html)
 * [Tailwind CSS](https://tailwindcss.com/)
 * [heroicons](https://heroicons.com/)
+
+## Running Instructions
+* Install [.NET 7.0 SDK](https://dotnet.microsoft.com/download/dotnet/7.0)
+* Install [Node.js](https://nodejs.org/en/) OR use the Tailwind CSS CDN
+  * If using the CDN, uncomment the CDN link in `src\KitchenInventory\Client\wwwroot\index.html`
+  * If not using the CDN, run `npm install`, then `tailwind-build.cmd/.sh`
+* Run `dotnet run` in the `src\KitchenInventory\Server` directory
+* Navigate to the port listed in a browser.

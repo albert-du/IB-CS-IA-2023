@@ -1,10 +1,8 @@
 ﻿namespace KitchenInventory.Server.Controllers;
 
-using KitchenInventory.Shared;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Sqlite;
 
 /// <summary>
 /// Controller for the management of items.
