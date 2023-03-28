@@ -1,29 +1,134 @@
-﻿<div class="flex flex-wrap items-center justify-center p-2 rounded-md shadow-lg gap-x-1">
-    <div class="w-6 h-6 mr-1 rounded-sm" style="background-color:@Color" />
-    @foreach (var color in colors)
+﻿<button @onclick="() => open = !open" type="button" class="relative flex flex-wrap items-center justify-center p-2 bg-gray-100 rounded-md grow-0 gap-x-1">
+    <div class="w-6 h-6 rounded-sm" style="background-color:@Color" />
+    <div class="text-base">Choose color</div>
+    @if (open)
     {
-        <div class="w-5 h-5 rounded-full" style="background-color: @color" @onclick="() => SelectAsync(color)" />
+        <div @onclick:stopPropagation="true" @onclick="() => open = false" class="fixed inset-0 z-40 flex flex-col items-center justify-center h-screen"/>
+        <div @onclick:stopPropagation="true" class="absolute top-0 z-50 flex p-3 mt-16 bg-white rounded-lg shadow">
+            @foreach (var colorSet in colors)
+            {
+                <div>
+                    @foreach (var color in colorSet)
+                    {
+                        <div @onclick="() => SelectAsync(color)" class="flex items-center justify-center w-6 h-6">
+                            <div style="background-color: @color" class="w-5 h-5 rounded-full" />
+                        </div>
+                    }
+                </div>
+            }
+        </div>
     }
-</div>
+</button>
 
 @code {
+    bool open;
     [Parameter, EditorRequired]
     public string Color { get; set; } = default!;
 
     [Parameter]
     public EventCallback<string> ColorChanged { get; set; }
 
-    List<string> colors = new()
-    {
-        // This list can be expanded later on.
-        "#ff3300",
-        "#ff9933",
-        "#ffff66",
-        "#00cc00",
-        "#3366ff",
-        "#9966ff"
-    };
-
     Task SelectAsync(string color) =>
     ColorChanged.InvokeAsync(color);
+
+    List<List<string>> colors = new()
+{
+// GRAYS
+new(){
+"#e5e7eb",
+"#d1d5db",
+"#9ca3af",
+"#6b7280",
+"#4b5563",
+"#374151",
+"#1f2937",
+"#111827"},
+
+// REDS
+new(){
+"#fecaca",
+"#fca5a5",
+"#f87171",
+"#ef4444",
+"#dc2626",
+"#b91c1c",
+"#991b1b",
+"#7f1d1d"},
+
+// ORANGES
+new(){
+"#fed7aa",
+"#fdba74",
+"#fb923c",
+"#f97316",
+"#ea580c",
+"#c2410c",
+"#9a3412",
+"#7c2d12"},
+
+// YELLOWS
+new(){
+"#fef08a",
+"#fde047",
+"#facc15",
+"#eab308",
+"#ca8a04",
+"#a16207",
+"#854d0e",
+"#713f12"},
+
+// GREENS
+new(){
+"#d9f99d",
+"#bef264",
+"#a3e635",
+"#84cc16",
+"#65a30d",
+"#4d7c0f",
+"#3f6212",
+"#365314"},
+
+new(){
+"#bbf7d0",
+"#86efac",
+"#4ade80",
+"#22c55e",
+"#16a34a",
+"#15803d",
+"#166534",
+"#14532d"},
+
+// BLUES
+new(){
+"#bfdbfe",
+"#93c5fd",
+"#60a5fa",
+"#3b82f6",
+"#2563eb",
+"#1d4ed8",
+"#1e40af",
+"#1e3a8a"},
+
+// PURPLES
+new(){
+"#e9d5ff",
+"#d8b4fe",
+"#c084fc",
+"#a855f7",
+"#9333ea",
+"#7e22ce",
+"#6b21a8",
+"#581c87"},
+
+// PINKS
+new(){
+"#fbcfe8",
+"#f9a8d4",
+"#f472b6",
+"#ec4899",
+"#db2777",
+"#be185d",
+"#9d174d",
+"#831843"}
+};
 }

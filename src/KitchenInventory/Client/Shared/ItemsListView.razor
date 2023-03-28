@@ -141,28 +141,31 @@ else if (viewingItem is not null)
 </div>
 @* Bottom pagination information. *@
 <div class="py-2">Showing @Items.Count of @Items.TotalResultCount items.</div>
-<div class="flex justify-center gap-x-2">
-    @if (Items.Page is not 1)
-    {
-        <a href=@GenerateLink(1) class="font-bold text-center text-white bg-gray-200 rounded-md h-7 w-7">1</a>
-        @if (Items.Page is not 2)
+@if (Items.TotalPages > 1)
+{
+    <div class="flex justify-center gap-x-2">
+        @if (Items.Page is not 1)
         {
-            <a href=@GenerateLink(Items.Page - 1)
-                class="font-bold text-center text-white bg-gray-200 rounded-md h-7 w-7">@(Items.Page - 1)</a>
+            <a href=@GenerateLink(1) class="font-bold text-center text-white bg-gray-200 rounded-md h-7 w-7">1</a>
+            @if (Items.Page is not 2)
+            {
+                <a href=@GenerateLink(Items.Page - 1)
+                    class="font-bold text-center text-white bg-gray-200 rounded-md h-7 w-7">@(Items.Page - 1)</a>
+            }
         }
-    }
-    <a class="font-bold text-center text-white bg-blue-500 rounded-md h-7 w-7">@Items.Page</a>
-    @if (Items.Page != Items.TotalPages && Items.TotalPages > 0)
-    {
-        <a href=@GenerateLink(Items.Page + 1)
-            class="font-bold text-center text-white bg-gray-200 rounded-md h-7 w-7">@(Items.Page + 1)</a>
-        @if (Items.Page != Items.TotalPages - 1)
+        <a class="font-bold text-center text-white bg-blue-500 rounded-md h-7 w-7">@Items.Page</a>
+        @if (Items.Page != Items.TotalPages && Items.TotalPages > 0)
         {
-            <a href=@GenerateLink(Items.TotalPages)
-                class="font-bold text-center text-white bg-gray-200 rounded-md h-7 w-7">@Items.TotalPages</a>
+            <a href=@GenerateLink(Items.Page + 1)
+                class="font-bold text-center text-white bg-gray-200 rounded-md h-7 w-7">@(Items.Page + 1)</a>
+            @if (Items.Page != Items.TotalPages - 1)
+            {
+                <a href=@GenerateLink(Items.TotalPages)
+                    class="font-bold text-center text-white bg-gray-200 rounded-md h-7 w-7">@Items.TotalPages</a>
+            }
         }
-    }
-</div>
+    </div>
+}
 
 @code {
     // Parameters
@@ -274,6 +277,10 @@ else if (viewingItem is not null)
         modalFormDisabled = false;
     }
 
-    protected override void OnInitialized() =>
+    protected override void OnParametersSet()
+    {
+        items.Clear();
         items.AddRange(Items.Result);
+    }
 }
+
